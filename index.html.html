@@ -1,0 +1,1647 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Picklebeer Club 🏓 - Professional Pickleball Splitter</title>
+    <!-- Tailwind CSS for modern responsive styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- html2canvas Library for capturing beautiful bill cards as images -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <!-- Custom styling to load beautiful Lao and English fonts, and hide scrollbars -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@300;400;600;700&family=Outfit:wght@400;600;700;900&display=swap');
+        
+        body {
+            font-family: 'Outfit', 'Noto Sans Lao', sans-serif;
+        }
+        
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        /* Stylized receipt tear style for the digital bill */
+        .receipt-card {
+            background-image: radial-gradient(circle at 0% 100%, transparent 10px, #ffffff 10px),
+                              radial-gradient(circle at 100% 100%, transparent 10px, #ffffff 10px);
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen selection:bg-emerald-500 selection:text-slate-950 antialiased font-sans">
+
+    <!-- Toast Notification -->
+    <div id="toast" class="hidden fixed bottom-6 right-6 z-50 bg-slate-900 border border-emerald-500/30 text-slate-100 px-5 py-4 rounded-xl shadow-2xl flex items-center gap-3 transition-all duration-300 transform translate-y-0">
+        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+        <span id="toast-message" class="text-xs font-bold"></span>
+    </div>
+
+    <!-- Confirm Modal -->
+    <div id="confirm-modal" class="hidden fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-sm w-full p-6 shadow-2xl transform scale-100 transition-all">
+            <h4 class="text-sm font-bold text-slate-200 mb-2">โปรดยืนยันการดำเนินงาน</h4>
+            <p id="confirm-message" class="text-xs text-slate-400 mb-6 leading-relaxed"></p>
+            <div class="flex justify-end gap-3">
+                <button id="btn-confirm-cancel" class="bg-slate-800 hover:bg-slate-700 text-xs font-bold px-4 py-2.5 rounded-xl transition text-slate-400">ยกเลิก</button>
+                <button id="btn-confirm-ok" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold px-5 py-2.5 rounded-xl transition shadow">ตกลง</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fullscreen & Save Image Gallery Modal -->
+    <div id="gallery-modal" class="hidden fixed inset-0 bg-slate-950/95 backdrop-blur-md z-50 flex flex-col items-center justify-center p-4 overflow-y-auto">
+        <div class="max-w-md w-full flex flex-col items-center gap-4 py-6">
+            <div class="flex justify-between items-center w-full px-4 text-slate-300">
+                <h4 class="text-sm font-black text-emerald-400 uppercase tracking-widest">👁️ บิลดิจิทัลขนาดเต็มหน้าจอ (9:19.5)</h4>
+                <button onclick="closeGalleryModal()" class="text-slate-400 hover:text-white bg-slate-900 border border-slate-800 rounded-full w-8 h-8 flex items-center justify-center transition">✕</button>
+            </div>
+            
+            <!-- Information message context -->
+            <div class="bg-slate-900/60 border border-slate-800 p-3 rounded-xl text-[10px] text-slate-300 w-full text-center leading-relaxed">
+                💡 <span class="font-bold text-emerald-400">สำหรับมือถือ:</span> แตะค้างที่รูปภาพด้านล่างแล้วเลือก <strong class="text-white">"บันทึกรูปภาพ" (Save Image)</strong> เพื่อเก็บลงคลังภาพได้ทันที!<br>
+                <span class="font-bold text-amber-400">สำหรับคอมพิวเตอร์:</span> คลิกขวาที่ภาพด้านล่างแล้วเลือก <strong class="text-white">"บันทึกรูปภาพเป็น..." (Save Image As...)</strong>
+            </div>
+
+            <!-- Dynamic rendered image goes here -->
+            <div class="shadow-2xl rounded-3xl overflow-hidden border-2 border-slate-800 bg-white p-1">
+                <img id="gallery-preview-img" src="" alt="Digital Bill Rendered" class="w-[310px] sm:w-[340px] aspect-[9/19.5] object-contain" />
+            </div>
+
+            <!-- Action buttons inside preview -->
+            <div class="flex flex-col gap-2 w-full px-4">
+                <button onclick="triggerDirectNativeShare()" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3 px-4 rounded-xl transition text-xs flex items-center justify-center gap-2 shadow-lg">
+                    📲 กดแชร์ส่งตรงเข้ากลุ่มไลน์ / บันทึกลงอัลบั้ม
+                </button>
+                <button onclick="closeGalleryModal()" class="w-full bg-slate-900 text-slate-400 border border-slate-800 font-bold py-2.5 px-4 rounded-xl transition text-xs">
+                    กลับไปหน้ารวม
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header Bar -->
+    <header class="border-b border-slate-900 bg-slate-950/90 backdrop-blur sticky top-0 z-40 px-4 py-4">
+        <div class="max-w-5xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="bg-gradient-to-tr from-emerald-500 to-lime-400 p-2.5 rounded-xl shadow-lg shadow-emerald-950/40">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-slate-950" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10" />
+                        <path d="M12 2a15.3 15.3 0 0 0-4 10 15.3 15.3 0 0 0 4 10" />
+                        <path d="M2 12h20" />
+                    </svg>
+                </div>
+                <div class="flex-1">
+                    <input 
+                        type="text" 
+                        id="club-name-input"
+                        class="bg-transparent font-black text-xl text-emerald-400 focus:outline-none border-b border-transparent hover:border-slate-800 focus:border-emerald-500 transition w-full"
+                        title="คลิกเพื่อแก้ไขชื่อคลับของคุณ"
+                    />
+                    <p class="text-[10px] text-slate-500 mt-0.5">ระบบคำนวณแบ่งค่าสนามพิกเคิลบอลระดับมืออาชีพ • สกุลเงินกีบ LAK • ปัดเศษขึ้นหลักพัน 🏓</p>
+                </div>
+            </div>
+            
+            <div class="flex gap-4 text-xs bg-slate-900 px-4 py-2.5 rounded-xl border border-slate-800 self-start md:self-auto">
+                <div>
+                    <span class="text-slate-500 block text-[9px] uppercase font-bold tracking-wider font-sans">สมาชิกทั้งหมด</span>
+                    <span id="stat-total-members" class="font-bold text-slate-200">0 คน</span>
+                </div>
+                <div class="border-l border-slate-800 pl-4">
+                    <span class="text-slate-500 block text-[9px] uppercase font-bold tracking-wider font-sans">ประวัติบันทึก</span>
+                    <span id="stat-total-sessions" class="font-bold text-slate-200">0 บิล</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-5xl mx-auto px-4 mt-6">
+        <!-- Navigation Tabs -->
+        <div class="flex bg-slate-900/80 p-1.5 rounded-2xl mb-6 border border-slate-800 overflow-x-auto whitespace-nowrap scrollbar-hide">
+            <button onclick="switchTab('quick-split')" id="tab-btn-quick-split" class="flex-1 py-2.5 px-4 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5">
+                📊 คำนวณบิลล่าสุด
+            </button>
+            <button onclick="switchTab('club-sessions')" id="tab-btn-club-sessions" class="flex-1 py-2.5 px-4 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5">
+                📅 ประวัติทั้งหมด
+            </button>
+            <button onclick="switchTab('members')" id="tab-btn-members" class="flex-1 py-2.5 px-4 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5">
+                👥 สมาชิกคลับ
+            </button>
+            <button onclick="switchTab('settings')" id="tab-btn-settings" class="flex-1 py-2.5 px-4 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5">
+                ⚙️ ช่องทางรับเงิน & ตั้งค่า
+            </button>
+        </div>
+
+        <!-- TAB 1: QUICK SPLIT -->
+        <div id="view-quick-split" class="tab-view space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Left Input Panel -->
+                <div class="lg:col-span-7 space-y-6">
+                    <!-- Section 1: Event Details & Payer Selection -->
+                    <div class="bg-slate-900 rounded-2xl p-5 border border-slate-800 shadow-xl">
+                        <h2 class="text-xs font-black text-emerald-400 mb-4 flex items-center gap-2 uppercase tracking-wide border-b border-slate-800/60 pb-2.5">
+                          <span>📅</span> ข้อมูลรายละเอียดกิจกรรมและผู้สำรองจ่าย
+                        </h2>
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+                            <div class="md:col-span-6">
+                                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">ชื่อกิจกรรม / แมทช์การเล่น</label>
+                                <input type="text" id="event-name" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-sm font-medium" placeholder="ระบุชื่อกิจกรรม หรือเว้นว่างไว้เพื่อสุ่มชื่อก๊วน" />
+                            </div>
+                            <div class="md:col-span-3">
+                                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">วันที่ทำกิจกรรม</label>
+                                <input type="date" id="event-date" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-sm font-medium" />
+                            </div>
+                            <div class="md:col-span-3">
+                                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">ผู้สำรองจ่าย</label>
+                                <select id="event-payer" onchange="syncInputsToState()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-xs font-semibold">
+                                    <option value="club-default">👤 ส่วนกลาง / ฉัน</option>
+                                    <!-- Options populated dynamically from active members -->
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 2: Court Pricing & Dynamic Expenses -->
+                    <div class="bg-slate-900 rounded-2xl p-5 border border-slate-800 shadow-xl">
+                        <h2 class="text-xs font-black text-emerald-400 mb-4 flex items-center justify-between uppercase tracking-wide border-b border-slate-800/60 pb-2.5">
+                          <span>🏟️</span> อัตราค่าบริการและรายการเพิ่มเติม (LAK)
+                          <button onclick="addNewExpenseItem()" class="text-[9px] bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 px-2 py-1 rounded-lg border border-emerald-500/20 transition">+ เพิ่มรายการใช้จ่ายอื่น</button>
+                        </h2>
+                        
+                        <!-- Hourly Rate Box -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">จำนวนชั่วโมงที่ใช้สนาม</label>
+                                <div class="relative">
+                                    <input type="number" id="court-hours" step="0.5" min="0.5" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-sm font-bold" />
+                                    <span class="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-500 text-xs font-bold">ชม.</span>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">ราคาต่อชั่วโมง (LAK / ₭)</label>
+                                <div class="relative">
+                                    <input type="number" id="court-rate" step="5000" min="0" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-emerald-400 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-sm font-bold" />
+                                    <span class="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-500 text-xs font-bold">₭</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Dynamic Expense Items Container -->
+                        <div class="space-y-2" id="dynamic-expenses-container">
+                            <!-- Dynamic items injected here -->
+                        </div>
+                    </div>
+
+                    <!-- Section 3: Select Players -->
+                    <div class="bg-slate-900 rounded-2xl p-5 border border-slate-800 shadow-xl">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3 mb-4">
+                            <div>
+                                <h2 class="text-xs font-black text-emerald-400 flex items-center gap-2 uppercase tracking-wide">
+                                    <span>👥</span> เลือกผู้เล่นที่ร่วมหารบิล
+                                </h2>
+                                <p class="text-[10px] text-slate-500 mt-0.5">แบ่งคำนวณเฉลี่ยเท่ากันอัตโนมัติ โดยระบุจำนวนผู้ชำระเงินแทนได้</p>
+                            </div>
+                            <div class="flex gap-2 self-start sm:self-center">
+                                <button onclick="selectAllPlayers(true)" class="text-[10px] font-bold bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg transition text-slate-300">เลือกทั้งหมด</button>
+                                <button onclick="selectAllPlayers(false)" class="text-[10px] font-bold bg-slate-950 hover:bg-slate-900 text-slate-500 px-3 py-1.5 rounded-lg transition border border-slate-800">ยกเลิกทั้งหมด</button>
+                            </div>
+                        </div>
+
+                        <!-- Search Member bar inside quick split -->
+                        <div class="mb-4">
+                            <input type="text" id="member-search-split" oninput="render()" placeholder="🔍 ค้นหาผู้เล่นเพื่อความรวดเร็ว..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-xs text-slate-300 focus:outline-none focus:ring-1 focus:ring-emerald-500" />
+                        </div>
+
+                        <div id="quick-calc-players-list" class="space-y-2.5 max-h-[350px] overflow-y-auto pr-1">
+                            <!-- Players populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Display Panel -->
+                <div class="lg:col-span-5 space-y-6">
+                    <!-- Grand Total Card -->
+                    <div class="bg-slate-900 rounded-2xl p-5 border border-slate-800 shadow-xl overflow-hidden relative">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl -z-10"></div>
+                        <h2 class="text-slate-500 text-[9px] font-bold tracking-wider uppercase mb-1">ยอดรวมค่าใช้จ่ายสนามทั้งสิ้น</h2>
+                        <div class="text-3xl font-black text-white flex items-baseline gap-1.5">
+                            <span id="grand-total-display">0</span>
+                            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">₭</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 mt-4 text-xs text-center">
+                            <div class="bg-slate-950/80 p-3 rounded-xl border border-slate-800">
+                                <span class="text-slate-500 block mb-0.5 text-[8px] uppercase tracking-wide">รวมค่าสนาม</span>
+                                <span id="court-cost-display" class="font-bold text-emerald-400">0 ₭</span>
+                            </div>
+                            <div class="bg-slate-950/80 p-3 rounded-xl border border-slate-800">
+                                <span class="text-slate-500 block mb-0.5 text-[8px] uppercase tracking-wide">ค่าใช้จ่ายอื่นๆ</span>
+                                <span id="other-cost-display" class="font-bold text-emerald-400">0 ₭</span>
+                            </div>
+                        </div>
+                        <div class="mt-3 text-xs text-slate-400 text-center bg-slate-950 py-2 rounded-xl border border-slate-800">
+                          สัดส่วนหารทั้งหมด: <span id="total-parts-display" class="font-bold text-emerald-400">0 ส่วน</span>
+                        </div>
+                        <div class="mt-2 text-[10px] text-amber-400 text-center bg-slate-950/40 py-1.5 rounded-lg border border-amber-500/10">
+                          ⚠️ ยอดทั้งหมดถูกปัดเศษขึ้นสู่ <strong class="underline">หลักพันกีบ</strong> เรียบร้อยแล้ว
+                        </div>
+                    </div>
+
+                    <!-- Digital Bill Card -->
+                    <div class="bg-slate-900 rounded-2xl p-5 border border-slate-800 shadow-xl space-y-4">
+                        <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2 border-b border-slate-800 pb-2.5">
+                            <span>🎫</span> จำลองการ์ดใบบิลดิจิทัล (Digital Bill Preview)
+                        </h3>
+                        
+                        <!-- The Canvas/DOM Container to render as image (Locked on EXACT aspect ratio 9:19.5 -> 360px X 780px with Pink Background) -->
+                        <div class="overflow-x-auto scrollbar-hide py-2 flex justify-center bg-slate-950 rounded-xl p-3 border border-slate-800">
+                            <!-- Visual Receipt Card optimized for exactly 9:19.5 layout distribution (Light Pink Style) -->
+                            <!-- Precise heights are declared on inner blocks to guarantee html2canvas renders perfectly without layout shift -->
+                            <div id="visual-bill-card" class="text-slate-900 p-5 rounded-3xl shadow-2xl w-[360px] h-[780px] shrink-0 border border-slate-200 flex flex-col justify-between" style="background-color: #fff0f5; font-family: 'Noto Sans Lao', 'Outfit', sans-serif;">
+                                
+                                <!-- Card Header: Height fixed at 75px -->
+                                <div class="text-center pb-2 border-b-2 border-dashed border-slate-300 h-[75px]">
+                                    <h3 class="text-xl font-black text-slate-950 flex items-center justify-center gap-1.5" style="font-weight: 900;">
+                                        🎾 <span id="card-club-name-title">Picklebeer Club</span> 🏓
+                                    </h3>
+                                    <!-- Combined Bill No and Date row -->
+                                    <div class="text-[11px] text-slate-700 font-bold mt-1.5">
+                                        <span id="card-bill-no-date">📄 No: ACT-0001 - 📅 21/5/2026</span>
+                                    </div>
+                                </div>
+
+                                <!-- Card Bill Breakdown details: Height fixed at 110px -->
+                                <div class="py-1 text-xs border-b border-slate-200 text-slate-700 font-semibold h-[110px] flex flex-col justify-center">
+                                    <div class="flex justify-between py-0.5">
+                                        <span>ຈຳນວນ:</span>
+                                        <span id="card-hours" class="font-bold text-slate-900">5 ຊົ່ວໂມງ</span>
+                                    </div>
+                                    <div class="flex justify-between py-0.5">
+                                        <span>ຄ່າເດີ່ນ:</span>
+                                        <span id="card-court-cost" class="font-mono text-slate-950">500,000 ₭</span>
+                                    </div>
+                                    <div id="card-dynamic-expenses" class="space-y-0 border-t border-b border-slate-100/50 py-0.5 my-0.5">
+                                        <!-- Itemized expenses rendered dynamically in Lao -->
+                                    </div>
+                                    <div class="flex justify-between text-sm font-black text-slate-950 pt-1">
+                                        <span>ລວມ:</span>
+                                        <span id="card-total-cost" class="font-mono text-slate-950">600,000 ₭</span>
+                                    </div>
+                                    <div class="flex justify-between text-slate-850 py-0.5">
+                                        <span>ຈຳນວນຄົນ:</span>
+                                        <span id="card-total-people" class="font-bold text-slate-950">17 ຄົນ</span>
+                                    </div>
+                                </div>
+
+                                <!-- Massive Per Person Share Rate Box: Height fixed at 75px -->
+                                <div class="my-1 bg-gradient-to-br from-lime-400 via-lime-300 to-lime-400 text-slate-950 rounded-2xl text-center border border-lime-500 shadow-sm h-[75px] flex flex-col justify-center items-center">
+                                    <span class="text-[10px] uppercase font-black tracking-widest text-lime-950 block mb-0.5">🔥 ຕົກຄົນລະ 🔥</span>
+                                    <span class="text-3xl font-black font-mono tracking-wider block leading-none text-slate-950">
+                                        <span id="card-per-person">0</span> ₭
+                                    </span>
+                                </div>
+
+                                <!-- Participant Breakdown inside visual receipt: Height fixed at 180px -->
+                                <div class="py-1 overflow-hidden flex flex-col h-[180px]">
+                                    <h4 class="text-[10px] uppercase font-black tracking-wider text-slate-400 mb-0.5 h-[15px]">ລາຍຊື່ຜູ້ແບ່ງປັນ:</h4>
+                                    <div id="card-members-list" class="space-y-0.5 font-semibold text-slate-900 text-xs overflow-y-auto h-[160px] max-h-[160px] pr-1 leading-tight scrollbar-hide">
+                                        <!-- Members List items -->
+                                    </div>
+                                </div>
+
+                                <!-- Bank & Static QR Embedded Footer: Height fixed at 265px -->
+                                <div class="mt-1 pt-2 border-t-2 border-dashed border-slate-300 bg-white/60 p-2 rounded-2xl border border-slate-200/50 text-center flex flex-col items-center justify-between h-[265px]">
+                                    <div class="text-[10px] text-slate-700 font-bold w-full leading-tight h-[20px] flex items-center justify-center">
+                                        <span id="card-bank-all-info" class="text-slate-950 font-extrabold text-xs">💵 : BCEL / Sompasith S / 01234568</span>
+                                    </div>
+                                    
+                                    <!-- QR Image inside visual card -->
+                                    <div class="flex justify-center h-[165px]">
+                                        <div id="card-qr-wrapper" class="w-40 h-40 bg-white p-2 border border-slate-300 rounded-2xl shadow-inner flex items-center justify-center overflow-hidden">
+                                            <span id="card-qr-placeholder" class="text-slate-400 text-[9px] p-2 leading-tight">ยังไม่มี QR Code</span>
+                                            <img id="card-qr-img" class="hidden w-full h-full object-contain" alt="Payment QR Code" />
+                                        </div>
+                                    </div>
+                                    
+                                    <p class="text-[8px] text-slate-400 font-bold h-[15px] flex items-center justify-center">โอนแล้วกະລุนาສົ່ງ ສະລີບລົງກຸ່ມ ขอบใจทุกคน! 🏓⚡</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card Action buttons -->
+                        <div class="pt-1">
+                            <button onclick="openGalleryModal()" class="w-full bg-slate-800 hover:bg-slate-755 text-slate-100 font-bold py-3 px-3 rounded-xl transition text-xs flex items-center justify-center gap-1.5 cursor-pointer border border-slate-700">
+                                🔍 ขยายดูบิลแบบเต็มจอ (9:19.5)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons Panel -->
+                    <div class="space-y-3">
+                        <!-- Save to album / Native Share Directly -->
+                        <button onclick="saveToPhotosGallery()" class="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black py-4 px-4 rounded-xl transition duration-200 flex items-center justify-center gap-2 text-xs shadow-lg cursor-pointer">
+                            📲 กดแชร์ส่งตรงเข้ากลุ่มไลน์ / บันทึกลงอัลบั้ม
+                        </button>
+                        
+                        <!-- Copy text summary - Placed directly under share/save -->
+                        <button onclick="copyLineSummary()" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-4 px-4 rounded-xl shadow-lg transition duration-200 flex items-center justify-center gap-2 text-xs">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-slate-950" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                          </svg>
+                          คัดลอกสรุปบิลแชร์เข้ากลุ่ม LINE 💬
+                        </button>
+                        
+                        <!-- Archive Session to history -->
+                        <button onclick="saveCurrentSession()" class="w-full bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-400 font-semibold py-3 px-4 rounded-xl transition duration-200 flex items-center justify-center gap-1.5 text-xs">
+                          💾 บันทึกสถิติกิจกรรมลงประวัติ
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: CLUB SESSIONS (HISTORY) -->
+        <div id="view-club-sessions" class="tab-view hidden space-y-4">
+            <h3 class="text-xs font-black text-slate-300 flex items-center gap-2 uppercase tracking-wider">
+              <span>📂</span> ประวัติกิจกรรมที่ถูกจัดเก็บทั้งหมด
+            </h3>
+            <div id="sessions-history-list" class="space-y-4">
+                <!-- History list populated dynamically -->
+            </div>
+        </div>
+
+        <!-- TAB 3: MEMBERS DIRECTORY -->
+        <div id="view-members" class="tab-view hidden bg-slate-900 rounded-2xl p-6 border border-slate-800 shadow-xl">
+            <div class="flex justify-between items-center mb-1 flex-wrap gap-2">
+                <h2 class="text-xs font-black text-emerald-400 flex items-center gap-2 uppercase tracking-wider">
+                  <span>👥</span> รายชื่อสมาชิกในคลับพิกเคิลบอล
+                </h2>
+                <!-- Reset to defaults button -->
+                <button onclick="resetToDefaultMembers()" class="text-[10px] text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 px-2.5 py-1 rounded-lg transition cursor-pointer">
+                    🔄 คืนค่าก๊วน 17 คนเริ่มต้น
+                </button>
+            </div>
+            <p class="text-xs text-slate-400 mb-4">ระบุและจัดเก็บรายชื่อผู้เล่นหลักเพื่อความสะดวกในการหารบิล (ใช้ปุ่ม ▲/▼ เพื่อย้ายลำดับขึ้น-ลง)</p>
+            
+            <!-- Filter Search for management -->
+            <div class="mb-4">
+                <input type="text" id="member-search-manage" oninput="render()" placeholder="🔍 ค้นหาสมาชิกในระบบ..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-xs text-slate-300 focus:outline-none focus:ring-1 focus:ring-emerald-500" />
+            </div>
+
+            <form id="add-member-form" onsubmit="handleMemberSubmit(event)" class="flex gap-2 mb-6">
+                <input type="text" id="new-member-name" placeholder="ป้อนชื่อสมาชิกใหม่ เช่น ຖິມຫນ່ອຍ, ກວິ້ນ..." class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-xs font-medium" required />
+                <button type="submit" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-5 rounded-xl font-black text-xs uppercase tracking-wide transition cursor-pointer">+ เพิ่มสมาชิก</button>
+            </form>
+            <div id="members-list-container" class="space-y-2">
+                <!-- Members directory list dynamically populated -->
+            </div>
+        </div>
+
+        <!-- TAB 4: SETTINGS & PRESETS -->
+        <div id="view-settings" class="tab-view hidden bg-slate-900 rounded-2xl p-6 border border-slate-800 shadow-xl space-y-6">
+            <!-- Download Offline Build -->
+            <div class="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-5">
+                <h3 class="text-xs font-black text-emerald-400 mb-2 uppercase tracking-wide flex items-center gap-2">
+                    <span>📥</span> ดาวน์โหลดแอปนี้เก็บไว้ในมือถือ (เล่นออฟไลน์)
+                </h3>
+                <p class="text-xs text-slate-300 mb-4 leading-relaxed">
+                    คุณสามารถดาวน์โหลดตัวแอปพลิเคชันนี้เป็นไฟล์เดียวจบ เพื่อบันทึกเก็บไว้เปิดใช้งานบนโทรศัพท์มือถือ แท็บเล็ต หรือคอมพิวเตอร์ของคุณ โดย<strong>สามารถใช้งานได้ทันทีแม้ไม่ได้เชื่อมต่ออินเทอร์เน็ต</strong>ที่ขอบสนาม
+                </p>
+                <button onclick="triggerDirectDownload()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3 px-5 rounded-xl transition-all text-xs flex items-center gap-2 shadow-md shadow-emerald-950/40 cursor-pointer">
+                    📥 คลิกเพื่อดาวน์โหลดแอป (.html)
+                </button>
+            </div>
+
+            <!-- Setting 1: System Defaults -->
+            <div>
+                <h2 class="text-xs font-black text-emerald-400 mb-1 flex items-center gap-2 uppercase tracking-wide border-b border-slate-800 pb-2.5">
+                  <span>⚙️</span> การตั้งค่าราคาเริ่มต้นของระบบ
+                </h2>
+                <p class="text-xs text-slate-400 mt-2">กำหนดค่าบริการสนามเริ่มต้น เพื่อความสะดวกในการสร้างบิลใหม่โดยไม่ต้องกรอกข้อมูลอัตราใหม่ทุกๆ รอบ</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">ราคาค่าสนามเริ่มต้นต่อชั่วโมง (LAK / ₭)</label>
+                        <input type="number" id="default-court-rate-input" oninput="saveDefaultCourtRate(this.value)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-emerald-400 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-sm font-bold" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Setting 2: Bank details -->
+            <div class="border-t border-slate-800 pt-6">
+                <h2 class="text-xs font-black text-emerald-400 mb-1 flex items-center gap-2 uppercase tracking-wide pb-2.5">
+                  <span>🏦</span> บัญชีรับเงินโอนส่วนกลาง (LAK)
+                </h2>
+                <p class="text-xs text-slate-400">ข้อมูลบัญชีผู้รับเงินโอนหลักนี้ จะถูกบันทึกจดจำไว้อย่างถาวรบนเบราว์เซอร์ของท่านโดยอัตโนมัติ</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">ธนาคารที่ต้องการรับเงิน</label>
+                        <select id="pay-bank-name" onchange="updatePaymentInfo()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-xs font-semibold">
+                            <option value="BCEL">BCEL</option>
+                            <option value="LDB">LDB Bank</option>
+                            <option value="APB">APB Bank</option>
+                            <option value="JDB">JDB Bank</option>
+                            <option value="LVB">Lao-Viet Bank</option>
+                            <option value="อื่นๆ">ธนาคารอื่นๆ ในสปป.ลาว</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">ชื่อบัญชีเจ้าของธนาคาร</label>
+                        <input type="text" id="pay-account-name" oninput="updatePaymentInfo()" placeholder="เช่น Sompasith S" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-xs font-semibold" />
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">หมายเลขบัญชีผู้รับเงิน</label>
+                        <input type="text" id="pay-account-number" oninput="updatePaymentInfo()" placeholder="เช่น 01234568" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-emerald-400 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-xs font-bold tracking-wider" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Static QR code register -->
+            <div class="border-t border-slate-800 pt-6">
+                <h3 class="text-xs font-bold text-slate-300 mb-3 uppercase tracking-wider flex items-center gap-2">
+                    <span>🖼️</span> แนบภาพ QR Code บัญชีธนาคาร (Static QR)
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                    <div class="space-y-3">
+                        <label class="flex flex-col justify-center items-center w-full h-44 bg-slate-950 rounded-2xl border-2 border-dashed border-slate-800 hover:border-emerald-500 transition cursor-pointer px-4 text-center relative">
+                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                <svg class="w-8 h-8 text-slate-500 mb-2 hover:text-emerald-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                <p class="mb-1 text-xs text-slate-300 font-bold">คลิกที่นี่เพื่อแนบภาพ QR Code ใหม่</p>
+                                <p class="text-[10px] text-slate-500">รองรับไฟล์สกรีนช็อต หรือ PNG, JPEG ทุกประเภท</p>
+                            </div>
+                            <input type="file" id="qr-file-input" accept="image/*" onchange="handleQrUpload(event)" class="hidden" />
+                        </label>
+                        <p class="text-[10px] text-slate-500 leading-relaxed">
+                            💡 ข้อมูลรูปภาพ QR Code จะถูกบันทึกจดจำไว้อย่างปลอดภัยบนเครื่องเบราว์เซอร์ของท่าน ไม่หายเมื่อปิดเครื่อง
+                        </p>
+                    </div>
+
+                    <div class="flex flex-col items-center justify-center bg-slate-900 border border-slate-800 rounded-2xl p-4 min-h-[11rem]">
+                        <div id="qr-preview-wrapper" class="hidden relative">
+                            <img id="qr-preview-image" src="" alt="QR Registry Preview" class="w-36 h-36 object-contain bg-white p-2.5 rounded-2xl border border-slate-800 shadow" />
+                            <button onclick="removeQrCode()" class="absolute -top-2.5 -right-2.5 bg-red-500 hover:bg-red-600 text-white font-black rounded-full w-6 h-6 flex items-center justify-center transition shadow-lg text-xs">✕</button>
+                            <div class="mt-2 text-center">
+                                <span class="text-[9px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-lg border border-emerald-500/20 font-bold uppercase tracking-wider font-sans">✓ บันทึกภาพเรียบร้อย</span>
+                            </div>
+                        </div>
+                        <div id="qr-preview-empty" class="text-center text-slate-500 py-6">
+                            <p class="text-xs font-semibold">ยังไม่มีการบันทึกภาพ QR บัญชี</p>
+                            <p class="text-[9px] mt-1 text-slate-700">กรุณาแนบสกรีนช็อตรหัสสแกนเพื่อเริ่มแสดงผลในแดชบอร์ดสรุปบิล</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Storage Keys Constants
+        const STORAGE_KEYS = {
+            MEMBERS: 'pickle_club_members_v3',
+            SESSIONS: 'pickle_club_sessions_v3',
+            PAYMENT_INFO: 'pickle_club_payment_v3',
+            CLUB_NAME: 'pickle_club_name_v3',
+            ST_QR: 'pickle_club_qr_v3',
+            DEFAULT_COURT_RATE: 'pickle_club_default_court_rate_v3',
+            EXPENSE_ITEMS: 'pickle_club_expense_items_v3'
+        };
+
+        // Application State
+        const state = {
+            activeTab: 'quick-split',
+            clubName: localStorage.getItem(STORAGE_KEYS.CLUB_NAME) || 'Picklebeer Club 🏓',
+            activityName: '',
+            activityDate: new Date().toISOString().split('T')[0],
+            paymentInfo: JSON.parse(localStorage.getItem(STORAGE_KEYS.PAYMENT_INFO)) || { name: 'Sompasith S', number: '01234568', bankName: 'BCEL' },
+            paymentQrCode: localStorage.getItem(STORAGE_KEYS.ST_QR) || '',
+            defaultCourtRate: localStorage.getItem(STORAGE_KEYS.DEFAULT_COURT_RATE) || '112500',
+            payerId: 'club-default', // "club-default" or playerId
+            
+            // ข้อมูลรายชื่อ 17 คนเริ่มต้น
+            members: JSON.parse(localStorage.getItem(STORAGE_KEYS.MEMBERS)) || [
+                { id: '1', name: 'ຖິມຫນ່ອຍ', active: true, memberCode: 'M-001' },
+                { id: '2', name: 'ກວິ້ນ', active: true, memberCode: 'M-002' },
+                { id: '3', name: 'ເກົ່າຈຸງ', active: true, memberCode: 'M-003' },
+                { id: '4', name: 'ເກົ່າສັນ', active: true, memberCode: 'M-004' },
+                { id: '5', name: 'ຢີ່ທື', active: true, memberCode: 'M-005' },
+                { id: '6', name: 'ອົງເລືອງ', active: true, memberCode: 'M-006' },
+                { id: '7', name: 'Billy', active: true, memberCode: 'M-007' },
+                { id: '8', name: 'Joe', active: true, memberCode: 'M-008' },
+                { id: '9', name: 'Deng', active: true, memberCode: 'M-009' },
+                { id: '10', name: 'Chern', active: true, memberCode: 'M-010' },
+                { id: '11', name: 'Moo', active: true, memberCode: 'M-011' },
+                { id: '12', name: 'A.Nha', active: true, memberCode: 'M-012' },
+                { id: '13', name: 'A.Tao', active: true, memberCode: 'M-013' },
+                { id: '14', name: 'William', active: true, memberCode: 'M-014' },
+                { id: '15', name: 'A.Fu', active: true, memberCode: 'M-015' },
+                { id: '16', name: 'P.Jump', active: true, memberCode: 'M-016' },
+                { id: '17', name: 'A.Sunny', active: true, memberCode: 'M-017' }
+            ],
+            
+            quickCalc: {
+                courtHours: 5,
+                courtRate: 112500,
+                // ไดนามิกค่าใช้จ่ายอื่นๆ
+                expenses: JSON.parse(localStorage.getItem(STORAGE_KEYS.EXPENSE_ITEMS)) || [
+                    { id: 'exp-1', desc: 'ຄ່າເບຍ', amount: 0 }
+                ],
+                selectedPlayers: {}, // {playerId: Boolean}
+                payForCounts: {} // {playerId: Number}
+            },
+            
+            sessions: JSON.parse(localStorage.getItem(STORAGE_KEYS.SESSIONS)) || [],
+            focusedPlayerId: null,
+            confirmAction: null
+        };
+
+        // Setup calculation state with defaults
+        state.quickCalc.courtRate = parseFloat(state.defaultCourtRate);
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').textContent = message;
+            toast.classList.remove('hidden');
+            toast.classList.add('translate-y-0');
+            if (window.toastTimeout) clearTimeout(window.toastTimeout);
+            window.toastTimeout = setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 4000);
+        }
+
+        function showConfirm(message, onConfirm) {
+            const modal = document.getElementById('confirm-modal');
+            document.getElementById('confirm-message').textContent = message;
+            modal.classList.remove('hidden');
+            state.confirmAction = onConfirm;
+        }
+
+        document.getElementById('btn-confirm-cancel').addEventListener('click', () => {
+            document.getElementById('confirm-modal').classList.add('hidden');
+            state.confirmAction = null;
+        });
+
+        document.getElementById('btn-confirm-ok').addEventListener('click', () => {
+            if (state.confirmAction) state.confirmAction();
+            document.getElementById('confirm-modal').classList.add('hidden');
+            state.confirmAction = null;
+        });
+
+        function formatNumber(num) {
+            return Math.round(num).toLocaleString();
+        }
+
+        function parseDateToDMY(dateStr) {
+            if (!dateStr) return '';
+            const parts = dateStr.split('-');
+            if (parts.length === 3) {
+                return `${parseInt(parts[2])}/${parseInt(parts[1])}/${parts[0]}`;
+            }
+            return dateStr;
+        }
+
+        function getLaoWeekday(dateStr) {
+            if (!dateStr) return '';
+            const dateParts = dateStr.split('-');
+            if (dateParts.length !== 3) return '';
+            const date = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+            if (isNaN(date.getTime())) return '';
+            const weekdays = ['ວັນອາທິດ', 'ວันຈັນ', 'ວັນອັງຄານ', 'ວັນພຸດ', 'ວັນພະຫັດ', 'ວັນສຸກ', 'ວັນເສົາ'];
+            return weekdays[date.getDay()];
+        }
+
+        // Initialize checkboxes & player select count based on current members
+        function syncQuickCalcState() {
+            state.members.forEach(member => {
+                if (state.quickCalc.selectedPlayers[member.id] === undefined) {
+                    state.quickCalc.selectedPlayers[member.id] = member.active;
+                }
+                if (state.quickCalc.payForCounts[member.id] === undefined) {
+                    state.quickCalc.payForCounts[member.id] = 1;
+                }
+            });
+        }
+
+        function switchTab(tabId) {
+            state.activeTab = tabId;
+            document.querySelectorAll('.tab-view').forEach(view => view.classList.add('hidden'));
+            document.getElementById(`view-${tabId}`).classList.remove('hidden');
+
+            document.querySelectorAll('[id^="tab-btn-"]').forEach(btn => {
+                btn.className = "flex-1 py-2.5 px-4 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 text-slate-400 hover:text-slate-200";
+            });
+            
+            const activeBtn = document.getElementById(`tab-btn-${tabId}`);
+            if (activeBtn) {
+                activeBtn.className = "flex-1 py-2.5 px-4 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 bg-emerald-500 text-slate-950 shadow-md";
+            }
+            
+            render();
+        }
+
+        // Dynamic Expense Handlers
+        function addNewExpenseItem() {
+            const newItem = {
+                id: 'exp-' + Date.now(),
+                desc: '',
+                amount: 0
+            };
+            state.quickCalc.expenses.push(newItem);
+            localStorage.setItem(STORAGE_KEYS.EXPENSE_ITEMS, JSON.stringify(state.quickCalc.expenses));
+            render();
+        }
+
+        function updateExpenseItem(id, field, value) {
+            const index = state.quickCalc.expenses.findIndex(item => item.id === id);
+            if (index !== -1) {
+                if (field === 'amount') {
+                    state.quickCalc.expenses[index].amount = parseFloat(value) || 0;
+                } else {
+                    state.quickCalc.expenses[index].desc = value;
+                }
+                localStorage.setItem(STORAGE_KEYS.EXPENSE_ITEMS, JSON.stringify(state.quickCalc.expenses));
+                renderCalculationsOnly();
+            }
+        }
+
+        function removeExpenseItem(id) {
+            state.quickCalc.expenses = state.quickCalc.expenses.filter(item => item.id !== id);
+            localStorage.setItem(STORAGE_KEYS.EXPENSE_ITEMS, JSON.stringify(state.quickCalc.expenses));
+            render();
+        }
+
+        // Calculation with Requirement 3: ROUND UP TO NEAREST 1,000 LAK
+        function getCalcResults() {
+            const { courtHours, courtRate, expenses, selectedPlayers, payForCounts } = state.quickCalc;
+            
+            const totalCourtCost = (parseFloat(courtHours) || 0) * (parseFloat(courtRate) || 0);
+            
+            // Sum all dynamic expenses
+            const totalOther = expenses.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
+            const grandTotal = totalCourtCost + totalOther;
+
+            const activePlayerIds = Object.keys(selectedPlayers).filter(id => selectedPlayers[id]);
+
+            if (activePlayerIds.length === 0) {
+                return {
+                    grandTotal,
+                    courtCost: totalCourtCost,
+                    otherCost: totalOther,
+                    splits: [],
+                    totalHeads: 0,
+                    sharePerHead: 0
+                };
+            }
+
+            let totalHeads = 0;
+            activePlayerIds.forEach(id => {
+                const count = parseInt(payForCounts[id]) || 1;
+                totalHeads += count;
+            });
+
+            // Calculate precise share per head
+            const sharePerHead = totalHeads > 0 ? (grandTotal / totalHeads) : 0;
+            
+            // Round UP to the nearest thousand (LAK / ₭)
+            const sharePerHeadRounded = Math.ceil(sharePerHead / 1000) * 1000;
+
+            const splits = [];
+            state.members.forEach(m => {
+                if (selectedPlayers[m.id]) {
+                    const count = parseInt(payForCounts[m.id]) || 1;
+                    const individualShare = Math.round(sharePerHeadRounded * count);
+
+                    splits.push({
+                        memberId: m.id,
+                        name: m.name,
+                        payForCount: count,
+                        share: individualShare
+                    });
+                }
+            });
+
+            return {
+                grandTotal,
+                courtCost: totalCourtCost,
+                otherCost: totalOther,
+                splits,
+                totalHeads,
+                sharePerHead: sharePerHeadRounded
+            };
+        }
+
+        function syncInputsToState() {
+            state.clubName = document.getElementById('club-name-input').value;
+            state.activityName = document.getElementById('event-name').value;
+            state.activityDate = document.getElementById('event-date').value;
+            state.payerId = document.getElementById('event-payer').value;
+
+            state.quickCalc.courtHours = parseFloat(document.getElementById('court-hours').value) || 0;
+            state.quickCalc.courtRate = parseFloat(document.getElementById('court-rate').value) || 0;
+
+            localStorage.setItem(STORAGE_KEYS.CLUB_NAME, state.clubName);
+            renderCalculationsOnly();
+        }
+
+        function togglePlayerSelection(playerId) {
+            state.quickCalc.selectedPlayers[playerId] = !state.quickCalc.selectedPlayers[playerId];
+            if (state.quickCalc.selectedPlayers[playerId] && !state.quickCalc.payForCounts[playerId]) {
+                state.quickCalc.payForCounts[playerId] = 1;
+            }
+            render();
+        }
+
+        function updatePlayerPayCount(playerId, change) {
+            let count = parseInt(state.quickCalc.payForCounts[playerId]) || 1;
+            count += change;
+            if (count < 1) count = 1;
+            state.quickCalc.payForCounts[playerId] = count;
+            render();
+        }
+
+        function selectAllPlayers(select) {
+            state.members.forEach(m => {
+                state.quickCalc.selectedPlayers[m.id] = select;
+                if (select && !state.quickCalc.payForCounts[m.id]) {
+                    state.quickCalc.payForCounts[m.id] = 1;
+                }
+            });
+            render();
+        }
+
+        function handleQrUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const MAX_W = 400;
+                    const MAX_H = 400;
+                    let w = img.width;
+                    let h = img.height;
+                    if (w > h) {
+                        if (w > MAX_W) { h *= MAX_W / w; w = MAX_W; }
+                    } else {
+                        if (h > MAX_H) { w *= MAX_H / h; h = MAX_H; }
+                    }
+                    canvas.width = w;
+                    canvas.height = h;
+                    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                    
+                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.85);
+                    state.paymentQrCode = compressedBase64;
+                    localStorage.setItem(STORAGE_KEYS.ST_QR, compressedBase64);
+                    showToast("⚡ บันทึกภาพคิวอาร์โค้ดถาวรสำเร็จแล้ว!");
+                    render();
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeQrCode() {
+            showConfirm("คุณต้องการลบรูปภาพ QR Code ชำระเงินนี้ออกจากระบบความจำหรือไม่?", () => {
+                state.paymentQrCode = '';
+                localStorage.removeItem(STORAGE_KEYS.ST_QR);
+                showToast("ลบรูปภาพรหัสคิวอาร์ชำระเงินเรียบร้อย");
+                render();
+            });
+        }
+
+        function saveDefaultCourtRate(val) {
+            state.defaultCourtRate = val;
+            localStorage.setItem(STORAGE_KEYS.DEFAULT_COURT_RATE, val);
+            state.quickCalc.courtRate = parseFloat(val) || 0;
+            document.getElementById('court-rate').value = val;
+            renderCalculationsOnly();
+        }
+
+        function updatePaymentInfo() {
+            state.paymentInfo.bankName = document.getElementById('pay-bank-name').value;
+            state.paymentInfo.name = document.getElementById('pay-account-name').value;
+            state.paymentInfo.number = document.getElementById('pay-account-number').value;
+            localStorage.setItem(STORAGE_KEYS.PAYMENT_INFO, JSON.stringify(state.paymentInfo));
+            renderCalculationsOnly();
+        }
+
+        function handleMemberSubmit(e) {
+            e.preventDefault();
+            const input = document.getElementById('new-member-name');
+            const name = input.value.trim();
+            if (!name) return;
+
+            const nextSeq = state.members.length > 0 
+              ? Math.max(...state.members.map(m => {
+                  const num = parseInt(m.memberCode?.replace('M-', ''), 10);
+                  return isNaN(num) ? 0 : num;
+                })) + 1
+              : 1;
+            const memberCode = `M-${String(nextSeq).padStart(3, '0')}`;
+
+            const newMember = {
+                id: Date.now().toString(),
+                name: name,
+                active: true,
+                memberCode
+            };
+
+            state.members.push(newMember);
+            state.quickCalc.selectedPlayers[newMember.id] = true;
+            state.quickCalc.payForCounts[newMember.id] = 1;
+            
+            localStorage.setItem(STORAGE_KEYS.MEMBERS, JSON.stringify(state.members));
+            input.value = '';
+            showToast(`เพิ่มสมาชิก ${name} [${memberCode}] สำเร็จแล้ว!`);
+            render();
+        }
+
+        function toggleMemberActive(id) {
+            state.members = state.members.map(m => m.id === id ? { ...m, active: !m.active } : m);
+            localStorage.setItem(STORAGE_KEYS.MEMBERS, JSON.stringify(state.members));
+            render();
+        }
+
+        function removeMember(id) {
+            const member = state.members.find(m => m.id === id);
+            showConfirm(`คุณต้องการลบรายชื่อสมาชิก ${member.name} ออกจากระบบคลับหรือไม่?`, () => {
+                state.members = state.members.filter(m => m.id !== id);
+                delete state.quickCalc.selectedPlayers[id];
+                delete state.quickCalc.payForCounts[id];
+                localStorage.setItem(STORAGE_KEYS.MEMBERS, JSON.stringify(state.members));
+                showToast(`ลบสมาชิก ${member.name} เรียบร้อยแล้ว`);
+                render();
+            });
+        }
+
+        function moveMember(index, direction) {
+            const targetIndex = index + direction;
+            if (targetIndex < 0 || targetIndex >= state.members.length) return;
+            
+            const temp = state.members[index];
+            state.members[index] = state.members[targetIndex];
+            state.members[targetIndex] = temp;
+            
+            state.members.forEach((m, idx) => {
+                m.memberCode = `M-${String(idx + 1).padStart(3, '0')}`;
+            });
+            
+            localStorage.setItem(STORAGE_KEYS.MEMBERS, JSON.stringify(state.members));
+            render();
+            showToast("🔄 สลับย้ายลำดับรายชื่อเรียบร้อยแล้ว!");
+        }
+
+        function resetToDefaultMembers() {
+            showConfirm("คุณแน่ใจหรือไม่ว่าต้องการรีเซ็ตรายชื่อเป็นก๊วน 17 คนเริ่มต้น? (ข้อมูลรายชื่อที่คุณพิมพ์เพิ่มใหม่จะถูกแทนที่ทั้งหมด)", () => {
+                const defaults = [
+                    "ຖິມຫນ່ອຍ", "ກວິ້ນ", "ເກົ່າຈຸງ", "ເກົ່າສັນ", "ຢີ່ທື", "ອົງເລືອງ",
+                    "Billy", "Joe", "Deng", "Chern", "Moo", "A.Nha", "A.Tao",
+                    "William", "A.Fu", "P.Jump", "A.Sunny"
+                ];
+                state.members = defaults.map((name, index) => ({
+                    id: (Date.now() + index).toString(),
+                    name: name,
+                    active: true,
+                    memberCode: `M-${String(index + 1).padStart(3, '0')}`
+                }));
+                
+                state.quickCalc.selectedPlayers = {};
+                state.quickCalc.payForCounts = {};
+                syncQuickCalcState();
+                
+                localStorage.setItem(STORAGE_KEYS.MEMBERS, JSON.stringify(state.members));
+                showToast("✨ รีเซ็ตกลับไปเป็นรายชื่อก๊วนพิกเคิลบอล 17 ท่านสำเร็จแล้ว!");
+                render();
+            });
+        }
+
+        function saveCurrentSession() {
+            const results = getCalcResults();
+            if (results.grandTotal === 0) return;
+
+            const nextSeq = state.sessions.length > 0
+              ? Math.max(...state.sessions.map(s => {
+                  const num = parseInt(s.activityCode?.replace('ACT-', ''), 10);
+                  return isNaN(num) ? 0 : num;
+                })) + 1
+              : 1;
+            const activityCode = `ACT-${String(nextSeq).padStart(4, '0')}`;
+
+            // ค้นหาข้อมูลผู้สำรองจ่ายหลัก
+            let payerName = "ฉัน";
+            if (state.payerId !== 'club-default') {
+                const p = state.members.find(m => m.id === state.payerId);
+                if (p) payerName = p.name;
+            }
+
+            const sessionObj = {
+                id: Date.now().toString(),
+                activityCode,
+                name: state.activityName.trim() || `กิจกรรมแชร์บิลค่าสนาม (${state.quickCalc.courtHours} ชม.)`,
+                date: state.activityDate,
+                payerName: payerName,
+                totalAmount: results.grandTotal,
+                splits: results.splits
+            };
+
+            state.sessions.unshift(sessionObj);
+            localStorage.setItem(STORAGE_KEYS.SESSIONS, JSON.stringify(state.sessions));
+            showToast(`บันทึกประวัติรหัสบิล ${activityCode} เรียบร้อยแล้ว!`);
+            switchTab('club-sessions');
+        }
+
+        function deleteSession(id) {
+            const session = state.sessions.find(s => s.id === id);
+            showConfirm(`คุณแน่ใจหรือไม่ว่าต้องการลบรายงานบิล ${session.activityCode} ออกอย่างถาวร?`, () => {
+                state.sessions = state.sessions.filter(s => s.id !== id);
+                localStorage.setItem(STORAGE_KEYS.SESSIONS, JSON.stringify(state.sessions));
+                showToast(`ลบประวัติบิล ${session.activityCode} เรียบร้อยแล้ว`);
+                render();
+            });
+        }
+
+        function getActivePayerDetails() {
+            if (state.payerId !== 'club-default') {
+                const p = state.members.find(m => m.id === state.payerId);
+                if (p) {
+                    return {
+                        name: p.name,
+                        bankName: state.paymentInfo.bankName || 'BCEL',
+                        accountName: state.paymentInfo.name || p.name,
+                        accountNo: state.paymentInfo.number || '-'
+                    };
+                }
+            }
+            return {
+                name: 'ฉัน (แอดมิน)',
+                bankName: state.paymentInfo.bankName || 'BCEL',
+                accountName: state.paymentInfo.name || '-',
+                accountNo: state.paymentInfo.number || '-'
+            };
+        }
+
+        function generateShareText() {
+            const { grandTotal, courtCost, otherCost, splits, totalHeads, sharePerHead } = getCalcResults();
+            
+            const nextSeq = state.sessions.length > 0
+              ? Math.max(...state.sessions.map(s => {
+                  const num = parseInt(s.activityCode?.replace('ACT-', ''), 10);
+                  return isNaN(num) ? 0 : num;
+                })) + 1
+              : 1;
+            const nextActivityCode = `ACT-${String(nextSeq).padStart(4, '0')}`;
+
+            const displayDate = parseDateToDMY(state.activityDate);
+            const laoDay = getLaoWeekday(state.activityDate);
+            const weekdayPrefix = laoDay ? `${laoDay} ` : '';
+
+            // Clean club name of emojis for custom text assembly
+            const displayClubName = state.clubName.replace(/^🎾\s*/, '').replace(/\s*🏓$/, '').trim();
+            const payerDetails = getActivePayerDetails();
+
+            let text = `🎾 ${displayClubName}\n`;
+            text += `📄 No: ${nextActivityCode}\n`;
+            text += `📅 ${weekdayPrefix}${displayDate}\n`;
+            text += `------------------------------------\n`;
+            text += `🏟️ ຄ່າເດີ່ນ (${state.quickCalc.courtHours} ຊມ.): ${formatNumber(courtCost)} ₭\n`;
+            
+            // Append other expenses if they are active
+            state.quickCalc.expenses.forEach(item => {
+                if ((item.amount || 0) > 0) {
+                    text += `💡 ${item.desc || 'ຄ່າໃຊ້ຈ່າຍອື່ນໆ'}: ${formatNumber(item.amount)} ₭\n`;
+                }
+            });
+
+            text += `💰 ຍອດລວມ: ${formatNumber(grandTotal)} ₭\n`;
+            text += `👥 ${totalHeads} ຄົນ\n\n`;
+            
+            // Bullet rate share per head
+            text += `*🔥ຕົກຄົນລະ =  ${formatNumber(sharePerHead)}  ₭ 🔥*\n\n`;
+            
+            if (splits.length === 0) {
+                text += `ບໍ່ມີລາຍການແບ່ງປັນ\n`;
+            } else {
+                splits.forEach((s, idx) => {
+                    if (s.payForCount > 1) {
+                        text += `${idx + 1}. ${s.name} (x${s.payForCount} ຄົນ)\n`;
+                    } else {
+                        text += `${idx + 1}. ${s.name}\n`;
+                    }
+                });
+            }
+
+            text += `\n💵ທຄ: ${payerDetails.bankName}\n`;
+            text += `ຊື່ ບຊ: ${payerDetails.accountName}\n`;
+            text += `ເລກ ບຊ: ${payerDetails.accountNo}\n\n`;
+            text += `ໂອນແລ້ວກະລຸນາສົ່ງລົງກຸ່ມ ຂອບໃຈທຸກຄົນ!`;
+            return text;
+        }
+
+        function copyLineSummary() {
+            const text = generateShareText();
+            const el = document.createElement('textarea');
+            el.value = text;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            showToast("📝 คัดลอกรายละเอียดบิลไปยังคลิปบอร์ดแล้ว พร้อมส่งเข้ากลุ่ม LINE!");
+        }
+
+        // This helper handles font availability and scroll misalignment, delivering a perfect layout matching live view 100%.
+        async function captureAndGetCanvas(element) {
+            if (document.fonts) {
+                await document.fonts.ready;
+            }
+            
+            // Backup scroll position
+            const scrollX = window.scrollX;
+            const scrollY = window.scrollY;
+            
+            // Temporarily scroll to top-left to avoid offset rendering issues in html2canvas
+            window.scrollTo(0, 0);
+            
+            try {
+                const canvas = await html2canvas(element, {
+                    scale: 3, // Premium high-def rendering
+                    useCORS: true,
+                    allowTaint: false,
+                    backgroundColor: '#fff0f5', // Pink bright paper matches original design 100%
+                    width: 360,
+                    height: 780,
+                    logging: false,
+                    scrollX: 0,
+                    scrollY: 0,
+                    windowWidth: document.documentElement.clientWidth,
+                    windowHeight: document.documentElement.clientHeight,
+                    onclone: (clonedDoc) => {
+                        const card = clonedDoc.getElementById('visual-bill-card');
+                        if (card) {
+                            card.style.transform = 'none';
+                            card.style.position = 'relative';
+                            card.style.margin = '0 auto';
+                        }
+                    }
+                });
+                
+                // Restore scroll position
+                window.scrollTo(scrollX, scrollY);
+                return canvas;
+            } catch (error) {
+                window.scrollTo(scrollX, scrollY);
+                throw error;
+            }
+        }
+
+        async function openGalleryModal() {
+            const cardElement = document.getElementById('visual-bill-card');
+            showToast("⏳ กำลังสร้างรูปภาพดิจิทัลบิลประสิทธิภาพสูง...");
+            
+            try {
+                const canvas = await captureAndGetCanvas(cardElement);
+                const imageURI = canvas.toDataURL("image/png");
+                document.getElementById('gallery-preview-img').src = imageURI;
+                document.getElementById('gallery-modal').classList.remove('hidden');
+                document.body.style.overflow = 'hidden'; // prevent background scrolling
+            } catch (err) {
+                console.error("html2canvas error: ", err);
+                showToast("❌ ไม่สามารถขยายรูปภาพได้ชั่วคราว ลองอัปเดตเบราว์เซอร์");
+            }
+        }
+
+        function closeGalleryModal() {
+            document.getElementById('gallery-modal').classList.add('hidden');
+            document.body.style.overflow = ''; // restore background scrolling
+        }
+
+        // Native Share Integration (Save Photo directly on Mobile phone Native Sheet)
+        async function triggerDirectNativeShare() {
+            const imgElementSrc = document.getElementById('gallery-preview-img').src;
+            if (!imgElementSrc) {
+                showToast("❌ ไม่มีข้อมูลรูปภาพ กรุณาลองใหม่อีกครั้ง");
+                return;
+            }
+
+            try {
+                const response = await fetch(imgElementSrc);
+                const blob = await response.blob();
+                const file = new File([blob], `Bill_${state.clubName.replace(/\s+/g, '_')}.png`, { type: 'image/png' });
+
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                        files: [file],
+                        title: `${state.clubName} Bill Receipt`,
+                        text: 'สแกนคิวอาร์โอนเงินบิลพิกเคิลบอล'
+                    });
+                    showToast("⚡ เปิดหน้าต่างระบบแชร์แล้ว! สามารถกด Save Image ได้เลย");
+                } else {
+                    showToast("💡 แตะค้างที่ภาพด้านบนเพื่อดาวน์โหลดลงคลังรูปภาพโดยตรง");
+                }
+            } catch (err) {
+                console.error("Native Share Error: ", err);
+                showToast("💡 แตะค้างที่รูปภาพด้านบนเพื่อเลือก 'บันทึกภาพ' ได้เลยครับ");
+            }
+        }
+
+        async function saveToPhotosGallery() {
+            const cardElement = document.getElementById('visual-bill-card');
+            showToast("⌛ กำลังประมวลผลบิลเข้าระบบคลังภาพ...");
+
+            try {
+                const canvas = await captureAndGetCanvas(cardElement);
+                const imageURI = canvas.toDataURL("image/png");
+
+                // Try File Share directly so smartphone native popup prompts "Save to Gallery / Photos"
+                const response = await fetch(imageURI);
+                const blob = await response.blob();
+                const file = new File([blob], `Bill_${state.clubName.replace(/\s+/g, '_')}.png`, { type: 'image/png' });
+
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                        files: [file],
+                        title: 'บันทึกรูปภาพบิลลงเครื่อง',
+                        text: 'สรุปบิลค่าสนามพิกเคิลบอล'
+                    });
+                    showToast("✅ เปิดระบบบันทึกรูปภาพเรียบร้อยแล้ว!");
+                } else {
+                    // Fallback to beautiful Interactive modal where mobile user can tap and hold to save instantly
+                    document.getElementById('gallery-preview-img').src = imageURI;
+                    document.getElementById('gallery-modal').classList.remove('hidden');
+                    document.body.style.overflow = 'hidden';
+                    showToast("📱 แตะรูปค้างไว้เพื่อเลือก 'บันทึกรูปภาพ' ลงคลังภาพ");
+                }
+            } catch (err) {
+                console.error("Render Gallery Error: ", err);
+                // Fallback direct download
+                const link = document.createElement('a');
+                link.download = `Bill_${state.clubName.replace(/\s+/g, '_')}.png`;
+                link.href = document.getElementById('gallery-preview-img').src || '';
+                if (link.href) {
+                    link.click();
+                    showToast("📥 ดาวน์โหลดรูปภาพบิลเรียบร้อยแล้ว");
+                } else {
+                    showToast("❌ ไม่สามารถประมวลผลได้ชั่วคราว");
+                }
+            }
+        }
+
+        function copyHistoricalSummary(id) {
+            const session = state.sessions.find(s => s.id === id);
+            if (!session) return;
+            
+            const displayDate = parseDateToDMY(session.date);
+            const laoDay = getLaoWeekday(session.date);
+            const weekdayPrefix = laoDay ? `${laoDay} ` : '';
+            const displayClubName = state.clubName.replace(/^🎾\s*/, '').replace(/\s*🏓$/, '').trim();
+            
+            let text = `🎾 ${displayClubName}\n`;
+            text += `📄 No: ${session.activityCode}\n`;
+            text += `📅 ${weekdayPrefix}${displayDate}\n`;
+            text += `------------------------------------\n`;
+            text += `💰 ຍອດລວມ: ${formatNumber(session.totalAmount)} ₭\n`;
+            
+            let totalHeads = 0;
+            session.splits.forEach(s => totalHeads += s.payForCount);
+            text += `👥 ${totalHeads} ຄົນ\n\n`;
+            
+            // Calculate rate per head from splits
+            const firstSplitShare = session.splits[0] ? Math.round(session.splits[0].share / session.splits[0].payForCount) : 0;
+            text += `*🔥ຕົກຄົນລະ =  ${formatNumber(firstSplitShare)}  ₭ 🔥*\n\n`;
+            
+            session.splits.forEach((s, idx) => {
+                if (s.payForCount > 1) {
+                    text += `${idx + 1}. ${s.name} (x${s.payForCount} ຄົນ)\n`;
+                } else {
+                    text += `${idx + 1}. ${s.name}\n`;
+                }
+            });
+            
+            text += `\n💵ທຄ: ${state.paymentInfo.bankName || 'BCEL'}\n`;
+            text += `ຊື່ ບຊ: ${state.paymentInfo.name}\n`;
+            text += `ເລກ ບຊ: ${state.paymentInfo.number}\n\n`;
+            text += `ໂອນແລ້ວກະລຸນາສົ່ງລົງກຸ່ມ ຂອບໃຈທຸກຄົນ!`;
+            
+            const el = document.createElement('textarea');
+            el.value = text;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            showToast(`📝 คัดลอกรายละเอียดบิล ${session.activityCode} ไปยังคลิปบอร์ดแล้ว!`);
+        }
+
+        function viewHistoricalBill(id) {
+            const session = state.sessions.find(s => s.id === id);
+            if (!session) return;
+            
+            // Reconstruct variables temporarily to feed active bill generator
+            state.activityName = session.name;
+            state.activityDate = session.date;
+            
+            // Load split headcounts
+            state.quickCalc.selectedPlayers = {};
+            state.quickCalc.payForCounts = {};
+            session.splits.forEach(s => {
+                state.quickCalc.selectedPlayers[s.memberId] = true;
+                state.quickCalc.payForCounts[s.memberId] = s.payForCount;
+            });
+            
+            // Reset base prices to let history amount load exactly via single dynamic expense override
+            state.quickCalc.courtHours = 0;
+            state.quickCalc.courtRate = 0;
+            state.quickCalc.expenses = [
+                { id: 'exp-hist', desc: session.name || 'ຍອດລວມທັງໝົດ', amount: session.totalAmount }
+            ];
+            
+            // Assign historic payer
+            const payer = state.members.find(m => m.name === session.payerName);
+            state.payerId = payer ? payer.id : 'club-default';
+            
+            // Switch tab to quick split and launch Fullscreen Preview Modal immediately!
+            switchTab('quick-split');
+            setTimeout(() => {
+                openGalleryModal();
+            }, 300);
+        }
+
+        function triggerDirectDownload() {
+            try {
+                document.getElementById('club-name-input').setAttribute('value', state.clubName);
+                document.getElementById('event-name').setAttribute('value', state.activityName);
+                document.getElementById('event-date').setAttribute('value', state.activityDate);
+                document.getElementById('court-hours').setAttribute('value', state.quickCalc.courtHours);
+                document.getElementById('court-rate').setAttribute('value', state.quickCalc.courtRate);
+                
+                const docType = "<!DOCTYPE html>\n";
+                const htmlContent = docType + document.documentElement.outerHTML;
+                
+                const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'Pickleball_Splitter_App.html';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showToast("⚡ เริ่มดาวน์โหลดไฟล์แอปออฟไลน์เรียบร้อยแล้ว!");
+            } catch (err) {
+                showToast("❌ เกิดข้อผิดพลาดในการดาวน์โหลด กรุณาลองคัดลอกโค้ดโดยตรง");
+            }
+        }
+
+        function renderCalculationsOnly() {
+            const results = getCalcResults();
+            const payerDetails = getActivePayerDetails();
+            
+            // Render Header and Overall stats
+            document.getElementById('stat-total-members').textContent = `${state.members.length} คน`;
+            document.getElementById('stat-total-sessions').textContent = `${state.sessions.length} บิล`;
+
+            // Display values inside Quick-calc tab
+            document.getElementById('grand-total-display').textContent = formatNumber(results.grandTotal);
+            document.getElementById('court-cost-display').textContent = `${formatNumber(results.courtCost)} ₭`;
+            document.getElementById('other-cost-display').textContent = `${formatNumber(results.otherCost)} ₭`;
+            document.getElementById('total-parts-display').textContent = `${results.totalHeads} ส่วน`;
+
+            // Synced values to Visual Receipt Card
+            document.getElementById('card-club-name-title').textContent = state.clubName.replace(/^🎾\s*/, '').replace(/\s*🏓$/, '').trim();
+            
+            // Combined Row for Bill No & Date
+            const nextSeq = state.sessions.length + 1;
+            const billNoText = `No: ACT-${String(nextSeq).padStart(4, '0')}`;
+            const laoDay = getLaoWeekday(state.activityDate);
+            const weekdayPrefix = laoDay ? `${laoDay} ` : '';
+            const fullDateStr = `${weekdayPrefix}${parseDateToDMY(state.activityDate)}`;
+            document.getElementById('card-bill-no-date').textContent = `${billNoText} - 📅 ${fullDateStr}`;
+            
+            document.getElementById('card-hours').textContent = `${state.quickCalc.courtHours} ຊົ່ວໂມງ`;
+            document.getElementById('card-court-cost').textContent = `${formatNumber(results.courtCost)} ₭`;
+            
+            // Render Dynamic Lao itemized lists
+            const cardDynamicContainer = document.getElementById('card-dynamic-expenses');
+            cardDynamicContainer.innerHTML = '';
+            state.quickCalc.expenses.forEach(item => {
+                if ((item.amount || 0) > 0) {
+                    const row = document.createElement('div');
+                    row.className = "flex justify-between text-slate-600 my-0 py-0 leading-tight text-[11px]";
+                    row.innerHTML = `<span>${item.desc || 'ຄ່າອື່ນໆ'}:</span><span class="font-mono text-slate-950">${formatNumber(item.amount)} ₭</span>`;
+                    cardDynamicContainer.appendChild(row);
+                }
+            });
+
+            document.getElementById('card-total-cost').textContent = `${formatNumber(results.grandTotal)} ₭`;
+            document.getElementById('card-total-people').textContent = `${results.totalHeads} ຄົນ`;
+            
+            // Massive rounded highlight share
+            document.getElementById('card-per-person').textContent = `${formatNumber(results.sharePerHead)}`;
+
+            // Populate Visual Bill Members List grouped
+            const cardMembersList = document.getElementById('card-members-list');
+            cardMembersList.innerHTML = '';
+            
+            const multiShareSplits = results.splits.filter(s => s.payForCount > 1);
+            const singleShareSplits = results.splits.filter(s => s.payForCount === 1);
+            
+            let displayIdx = 1;
+            
+            multiShareSplits.forEach((s) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = "py-0.5 border-b border-slate-150/40 flex justify-between items-center text-slate-900 text-xs leading-none";
+                itemDiv.innerHTML = `
+                    <span class="font-bold text-slate-950">${displayIdx}. ${s.name} <span class="text-[9px] text-emerald-600 font-extrabold">(x${s.payForCount}ຄົນ)</span></span>
+                    <span class="font-mono font-black text-emerald-700">➡️ ${formatNumber(s.share)} ₭</span>
+                `;
+                cardMembersList.appendChild(itemDiv);
+                displayIdx++;
+            });
+
+            // Reconstruct shared layout (Only index first element, append rest separated by commas)
+            if (singleShareSplits.length > 0) {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = "py-0.5 text-slate-800 text-xs leading-tight";
+                
+                // Display first element indexed, rest appended
+                const firstElement = singleShareSplits[0];
+                const restElementsNames = singleShareSplits.slice(1).map(s => s.name).join(', ');
+                const groupedNames = `${displayIdx}. ${firstElement.name}` + (restElementsNames ? `, ${restElementsNames}` : '');
+                
+                itemDiv.innerHTML = `
+                    <div class="flex flex-col mt-0.5">
+                        <span class="text-[9px] uppercase font-black text-slate-400 mb-0.5 tracking-wider">ສະມາຊິກຫານເທົ່າກັນ (ຄົນລະ 1 ສ່ວນ):</span>
+                        <span class="text-slate-950 font-bold leading-tight">${groupedNames}</span>
+                    </div>
+                `;
+                cardMembersList.appendChild(itemDiv);
+            }
+            
+            if (results.splits.length === 0) {
+                cardMembersList.innerHTML = `<div class="text-slate-400 text-center py-2 text-xs italic">ບໍ່ມີສະມາຊິກຮ່ວມຫານບິນ</div>`;
+            }
+
+            // Bank info display row combination
+            const bankAllInfoStr = `💵 : ${payerDetails.bankName} / ${payerDetails.accountName} / ${payerDetails.accountNo}`;
+            document.getElementById('card-bank-all-info').textContent = bankAllInfoStr;
+            
+            const cardQrImg = document.getElementById('card-qr-img');
+            const cardQrPlaceholder = document.getElementById('card-qr-placeholder');
+            
+            if (state.paymentQrCode) {
+                cardQrImg.src = state.paymentQrCode;
+                cardQrImg.classList.remove('hidden');
+                cardQrPlaceholder.classList.add('hidden');
+            } else if (payerDetails.accountNo && payerDetails.accountNo !== '-') {
+                const cleanAccNo = payerDetails.accountNo.replace(/\s+/g, '');
+                const textForQr = `Bank: ${payerDetails.bankName}, Acc: ${cleanAccNo}, Name: ${payerDetails.accountName}, Amount: ${results.sharePerHead}`;
+                cardQrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(textForQr)}`;
+                cardQrImg.classList.remove('hidden');
+                cardQrPlaceholder.classList.add('hidden');
+            } else {
+                cardQrImg.src = "";
+                cardQrImg.classList.add('hidden');
+                cardQrPlaceholder.classList.remove('hidden');
+            }
+        }
+
+        function render() {
+            syncQuickCalcState();
+
+            // Set Inputs Value safely
+            document.getElementById('club-name-input').value = state.clubName;
+            document.getElementById('event-name').value = state.activityName;
+            document.getElementById('event-date').value = state.activityDate;
+            document.getElementById('court-hours').value = state.quickCalc.courtHours;
+            document.getElementById('court-rate').value = state.quickCalc.courtRate;
+
+            // Render Payer select list options dynamically
+            const payerSelect = document.getElementById('event-payer');
+            const savedSelectedVal = state.payerId;
+            payerSelect.innerHTML = '<option value="club-default">👤 ส่วนกลาง / ฉัน</option>';
+            state.members.forEach(member => {
+                if (member.active) {
+                    const opt = document.createElement('option');
+                    opt.value = member.id;
+                    opt.textContent = `👤 ${member.name} (${member.memberCode})`;
+                    if (member.id === savedSelectedVal) opt.selected = true;
+                    payerSelect.appendChild(opt);
+                }
+            });
+
+            // Render dynamic expenses list in left panel
+            const dynamicExpensesContainer = document.getElementById('dynamic-expenses-container');
+            dynamicExpensesContainer.innerHTML = '';
+            state.quickCalc.expenses.forEach(item => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = "grid grid-cols-12 gap-3 items-center bg-slate-950/40 p-3 rounded-xl border border-slate-850";
+                itemDiv.innerHTML = `
+                    <div class="col-span-6">
+                        <input type="text" oninput="updateExpenseItem('${item.id}', 'desc', this.value)" value="${item.desc}" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-slate-100 text-xs" placeholder="เช่น ค่าน้ำ, ลูกบอล" />
+                    </div>
+                    <div class="col-span-5 relative">
+                        <input type="number" step="1000" min="0" oninput="updateExpenseItem('${item.id}', 'amount', this.value)" value="${item.amount || ''}" class="w-full bg-slate-950 border border-slate-800 rounded-lg pl-3 pr-7 py-1.5 text-emerald-400 text-xs font-bold" placeholder="0" />
+                        <span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-600 text-[10px]">₭</span>
+                    </div>
+                    <div class="col-span-1 text-center">
+                        <button onclick="removeExpenseItem('${item.id}')" class="text-slate-500 hover:text-red-400 transition text-xs">✕</button>
+                    </div>
+                `;
+                dynamicExpensesContainer.appendChild(itemDiv);
+            });
+
+            // Render Core Calculations Tab Layout
+            renderCalculationsOnly();
+
+            // Search Filter keyword for Quick split tab
+            const searchSplitVal = document.getElementById('member-search-split').value.toLowerCase().trim();
+
+            // Populate Players Selection Checklist in Quick Calc Tab
+            const qcPlayersList = document.getElementById('quick-calc-players-list');
+            qcPlayersList.innerHTML = '';
+            
+            if (state.members.length === 0) {
+                qcPlayersList.innerHTML = `<div class="text-center text-xs text-slate-500 py-6 font-sans">ยังไม่มีรายชื่อสมาชิก กรุณาไปเพิ่มรายชื่อในแถบ "สมาชิกคลับ" ก่อนครับ</div>`;
+            } else {
+                let displayedPlayersCount = 0;
+                state.members.forEach(member => {
+                    if (searchSplitVal && !member.name.toLowerCase().includes(searchSplitVal) && !member.memberCode.toLowerCase().includes(searchSplitVal)) {
+                        return; // Skip if search filter doesn't match
+                    }
+                    displayedPlayersCount++;
+
+                    const isChecked = !!state.quickCalc.selectedPlayers[member.id];
+                    const payCount = state.quickCalc.payForCounts[member.id] || 1;
+
+                    const pDiv = document.createElement('div');
+                    pDiv.className = `flex items-center justify-between p-3.5 rounded-xl border transition-all ${isChecked ? 'bg-slate-850/50 border-slate-800 shadow' : 'bg-slate-950/20 border-slate-900/60 opacity-40'}`;
+                    
+                    pDiv.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" id="player-chk-${member.id}" ${isChecked ? 'checked' : ''} onchange="togglePlayerSelection('${member.id}')" class="w-5 h-5 rounded border-slate-700 text-emerald-500 focus:ring-emerald-500 cursor-pointer bg-slate-950" />
+                            <label for="player-chk-${member.id}" class="font-semibold text-slate-200 cursor-pointer select-none text-xs flex items-center gap-2">
+                                <span class="text-[9px] font-mono bg-slate-950 text-emerald-400 px-1.5 py-0.5 rounded border border-slate-800">${member.memberCode || 'M-000'}</span>
+                                <span>${member.name}</span>
+                            </label>
+                        </div>
+                        ${isChecked ? `
+                        <div class="flex items-center gap-2 bg-slate-950/80 px-3 py-1.5 rounded-xl border border-slate-800">
+                            <span class="text-[9px] font-bold text-slate-500 uppercase tracking-wide">รับผิดชอบ:</span>
+                            <div class="flex items-center bg-slate-950 border border-slate-800 rounded-lg overflow-hidden">
+                                <button type="button" onclick="updatePlayerPayCount('${member.id}', -1)" class="px-2 py-0.5 text-slate-400 hover:bg-slate-850 text-xs transition font-black">-</button>
+                                <span class="px-3 text-xs text-emerald-400 font-bold min-w-[18px] text-center bg-slate-900">${payCount}</span>
+                                <button type="button" onclick="updatePlayerPayCount('${member.id}', 1)" class="px-3 py-0.5 text-slate-400 hover:bg-slate-850 text-xs transition font-black">+</button>
+                            </div>
+                            <span class="text-[9px] text-slate-500 font-bold">คน</span>
+                        </div>
+                        ` : ''}
+                    `;
+                    qcPlayersList.appendChild(pDiv);
+                });
+
+                if (displayedPlayersCount === 0) {
+                    qcPlayersList.innerHTML = `<div class="text-center text-xs text-slate-500 py-6 font-sans">ไม่พบรายชื่อผู้เล่นที่ค้นหา</div>`;
+                }
+            }
+
+            // TAB 2: CLUB SESSIONS (HISTORY)
+            const sessionsList = document.getElementById('sessions-history-list');
+            sessionsList.innerHTML = '';
+            
+            if (state.sessions.length === 0) {
+                sessionsList.innerHTML = `<div class="bg-slate-900 border border-slate-800 rounded-2xl p-10 text-center text-slate-500 text-xs font-sans">ยังไม่มีการบันทึกประวัติค่าเช่าสนาม เมื่อคำนวณบิลหน้าแรกเสร็จสิ้น สามารถบันทึกประวัติมาเก็บรวบรวมข้อมูลไว้ที่นี่ได้ครับ</div>`;
+            } else {
+                state.sessions.forEach(session => {
+                    const sessionCard = document.createElement('div');
+                    sessionCard.className = "bg-slate-900 rounded-2xl p-5 border border-slate-800 shadow-md";
+                    
+                    let splitsHTML = '';
+                    session.splits.forEach(s => {
+                        const mObj = state.members.find(m => m.id === s.memberId);
+                        splitsHTML += `
+                            <li class="flex justify-between border-b border-slate-900/40 pb-1.5 last:border-0 last:pb-0 items-center">
+                                <span class="font-medium text-slate-300 flex items-center gap-2">
+                                  <span class="text-[9px] font-mono bg-slate-900 text-slate-400 px-1 py-0.2 rounded border border-slate-800">${mObj?.memberCode || 'M-000'}</span>
+                                  <span>${s.name} ${s.payForCount > 1 ? `(หารทดแทน ${s.payForCount} คน)` : ''}</span>
+                                </span>
+                                <span class="text-emerald-400 font-bold">${formatNumber(s.share)} LAK</span>
+                            </li>
+                        `;
+                    });
+
+                    sessionCard.innerHTML = `
+                        <div class="flex justify-between items-start mb-4 border-b border-slate-800 pb-3">
+                            <div>
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="text-[10px] font-mono font-black bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-md">${session.activityCode || 'ACT-0000'}</span>
+                                    <h4 class="font-extrabold text-slate-200 text-sm">${session.name}</h4>
+                                </div>
+                                <span class="text-[10px] text-slate-500 mt-1 block">📅 วันที่ทำกิจกรรม: ${parseDateToDMY(session.date)} • ผู้สำรองจ่าย: <strong class="text-slate-300">${session.payerName || 'ส่วนกลาง'}</strong></span>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <div class="text-right">
+                                    <span class="text-[8px] text-slate-500 block uppercase font-bold tracking-wide">ยอดรวมทริป</span>
+                                    <span class="text-sm font-black text-emerald-400">₭ ${formatNumber(session.totalAmount)}</span>
+                                </div>
+                                <button onclick="deleteSession('${session.id}')" class="p-1.5 text-slate-500 hover:text-red-400 hover:bg-red-500/5 rounded-lg transition" title="ลบข้อมูล">✕</button>
+                            </div>
+                        </div>
+                        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                            <span class="text-[10px] font-black text-emerald-400 block mb-2 uppercase tracking-wide">รายละเอียดแชร์รายบุคคล:</span>
+                            <ul class="text-xs space-y-2 text-slate-400">${splitsHTML}</ul>
+                            
+                            <!-- Action buttons inside sessions history card -->
+                            <div class="mt-4 pt-3 border-t border-slate-900 flex gap-2">
+                                <button onclick="viewHistoricalBill('${session.id}')" class="flex-1 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-300 font-bold py-2 px-3 rounded-lg transition text-xs flex items-center justify-center gap-1.5 cursor-pointer">
+                                    🔍 ขยายดูบิลแบบเต็มจอ
+                                </button>
+                                <button onclick="copyHistoricalSummary('${session.id}')" class="flex-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-2 px-3 rounded-lg transition text-xs flex items-center justify-center gap-1.5 cursor-pointer">
+                                    📋 คัดลอกสรุปบิล
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    sessionsList.appendChild(sessionCard);
+                });
+            }
+
+            // TAB 3: MEMBERS REGISTER
+            const searchManageVal = document.getElementById('member-search-manage').value.toLowerCase().trim();
+            const mListContainer = document.getElementById('members-list-container');
+            mListContainer.innerHTML = '';
+            
+            let displayedManageCount = 0;
+            state.members.forEach((member, index) => {
+                if (searchManageVal && !member.name.toLowerCase().includes(searchManageVal) && !member.memberCode.toLowerCase().includes(searchManageVal)) {
+                    return; // Skip if filter doesn't match
+                }
+                displayedManageCount++;
+
+                const isFirst = index === 0;
+                const isLast = index === state.members.length - 1;
+                
+                const memberRow = document.createElement('div');
+                memberRow.className = "flex items-center justify-between p-3.5 bg-slate-950/60 rounded-xl border border-slate-800 hover:border-slate-700 transition";
+                memberRow.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <span class="w-2 h-2 rounded-full ${member.active ? 'bg-emerald-400 shadow shadow-emerald-400/40 animate-pulse' : 'bg-slate-600'}"></span>
+                        <span class="text-[9px] font-mono bg-slate-900 text-emerald-400 border border-slate-800 px-2 py-0.5 rounded font-bold">${member.memberCode || 'M-000'}</span>
+                        <span class="font-bold text-slate-200 text-xs">${member.name}</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="flex gap-1 mr-2">
+                            <button onclick="moveMember(${index}, -1)" ${isFirst ? 'disabled class="opacity-20 cursor-not-allowed text-xs p-1"' : 'class="hover:bg-slate-800 text-slate-400 hover:text-emerald-400 p-1 rounded transition text-xs"'} title="ย้ายขึ้น">▲</button>
+                            <button onclick="moveMember(${index}, 1)" ${isLast ? 'disabled class="opacity-20 cursor-not-allowed text-xs p-1"' : 'class="hover:bg-slate-800 text-slate-400 hover:text-emerald-400 p-1 rounded transition text-xs"'} title="ย้ายลง">▼</button>
+                        </div>
+                        <button onclick="toggleMemberActive('${member.id}')" class="text-[9px] px-2.5 py-1.5 rounded-lg font-black tracking-wide uppercase transition ${member.active ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-slate-900 text-slate-500 border border-slate-800'}">
+                            ${member.active ? 'เปิดใช้งาน' : 'ระงับชั่วคราว'}
+                        </button>
+                        <button onclick="removeMember('${member.id}')" class="text-slate-500 hover:text-red-400 p-1.5 rounded hover:bg-red-500/5 transition">✕</button>
+                    </div>
+                `;
+                mListContainer.appendChild(memberRow);
+            });
+
+            if (displayedManageCount === 0) {
+                mListContainer.innerHTML = `<div class="text-center text-xs text-slate-500 py-6 font-sans">ไม่พบสมาชิกระบบที่ค้นหา</div>`;
+            }
+
+            // TAB 4: SETTINGS PRESETS
+            document.getElementById('default-court-rate-input').value = state.defaultCourtRate;
+            document.getElementById('pay-bank-name').value = state.paymentInfo.bankName;
+            document.getElementById('pay-account-name').value = state.paymentInfo.name;
+            document.getElementById('pay-account-number').value = state.paymentInfo.number;
+
+            // Render Settings QR panel status
+            const qrWrapper = document.getElementById('qr-preview-wrapper');
+            const qrEmpty = document.getElementById('qr-preview-empty');
+            if (state.paymentQrCode) {
+                qrWrapper.classList.remove('hidden');
+                qrEmpty.classList.add('hidden');
+                document.getElementById('qr-preview-image').src = state.paymentQrCode;
+            } else {
+                qrWrapper.classList.add('hidden');
+                qrEmpty.classList.remove('hidden');
+            }
+        }
+
+        // Bind interactive event listeners for on-the-fly calculations
+        document.getElementById('club-name-input').addEventListener('input', syncInputsToState);
+        document.getElementById('event-name').addEventListener('input', syncInputsToState);
+        document.getElementById('event-date').addEventListener('input', syncInputsToState);
+        document.getElementById('court-hours').addEventListener('input', syncInputsToState);
+        document.getElementById('court-rate').addEventListener('input', syncInputsToState);
+
+        // Window load setup
+        window.onload = function() {
+            syncQuickCalcState();
+            switchTab('quick-split');
+        }
+    </script>
+</body>
+</html>
